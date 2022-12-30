@@ -4,7 +4,12 @@ import { IBlog } from '~/utils/TypeScript';
 import { imageUpload } from '~/utils/ImageUpload';
 import { postAPI, getAPI } from '~/utils/FetchData';
 import { ALERT, IAlertType } from '~/redux/types/alertType';
-import { GET_HOME_BLOGS, IGetHomeBlogsType } from '~/redux/types/blogType';
+import {
+    GET_HOME_BLOGS,
+    IGetHomeBlogsType,
+    GET_BLOGS_CATEGORY_ID,
+    IGetBlogsCategoryType,
+} from '~/redux/types/blogType';
 
 export const createBlog = (blog: IBlog, token: string) => {
     return async (dispatch: Dispatch<IAlertType>) => {
@@ -21,7 +26,7 @@ export const createBlog = (blog: IBlog, token: string) => {
 
             const newBlog = { ...blog, thumbnail: url };
 
-            const res = await postAPI('blog', newBlog, token);
+            await postAPI('blog', newBlog, token);
 
             dispatch({ type: ALERT, payload: { loading: false } });
         } catch (err: any) {
@@ -38,6 +43,24 @@ export const getHomeBlogs = () => {
             const res = await getAPI('home/blogs');
 
             dispatch({ type: GET_HOME_BLOGS, payload: res.data });
+
+            dispatch({ type: ALERT, payload: { loading: false } });
+        } catch (err: any) {
+            dispatch({ type: ALERT, payload: { errors: err.response.data.msg } });
+        }
+    };
+};
+
+export const getBlogsByCategoryId = (id: string, search: string) => {
+    return async (dispatch: Dispatch<IAlertType | IGetBlogsCategoryType>) => {
+        try {
+            let limit = 2;
+            let value = search ? search : `?page=${1}`;
+            dispatch({ type: ALERT, payload: { loading: true } });
+
+            const res = await getAPI(`blogs/${id}${value}&limit=${limit}`);
+
+            dispatch({ type: GET_BLOGS_CATEGORY_ID, payload: { ...res.data, id, search } });
 
             dispatch({ type: ALERT, payload: { loading: false } });
         } catch (err: any) {
